@@ -78,6 +78,8 @@ export default {
       // console.log("obj",obj);
 
     },
+
+    // JSON 파일로 현재 캔버스를 저장하는 함수
     async toJSON(){
 
       const json = canvas.toDatalessJSON(["clipPath"]);
@@ -91,6 +93,22 @@ export default {
       a.download = "work.json";
       a.click();
       URL.revokeObjectURL(blobURL);
+    },
+
+    // 이미지 파일 저장
+    // 이미지 첨부된 상태에서는 CORS 정책 위반때문에 다운로드가 안됨.
+    // 이미지 첨부시 CORS 정책 명시 필수.
+    toImage(){
+      const ext = "png";  // 파일 형식
+      const base64 = canvas.toDataURL({
+        format: ext,
+        enableRetinaScaling: true
+      })
+      const link = document.createElement("a");
+      link.href = base64;
+      link.download = `work.${ext}`;
+      link.click();
+
     }
   },
 
@@ -100,6 +118,13 @@ export default {
     canvas= new fabric.Canvas(this.$refs.canvasRef,{
       isDrawingMode: false
     })
+
+    // 이미지 첨부할 때는 CORS 정책에 위반되므로 다운로드가 안된다.
+    // 고로 이미지 첨부시엔 CORS 정책을 포함하여 설정해준다.
+    new fabric.Image.fromURL(this.myImage,(_img) => {
+      const _me = _img.set({left:0, top:0, width:_img.width, height:_img.height})
+      canvas.add(_me)
+    },{ crossOrigin: 'anonymous' })
 
     const rect = new fabric.Rect({
       top: 100,
@@ -113,7 +138,6 @@ export default {
       cornerColor:"#000000",    // 코너 색깔 조절 툴
       cornerSize:8,             // 코너 크기 조절 툴
     })
-
 
     // 글씨 입력 박스 생성
     const textBox = new fabric.Textbox("FabricJS",{
@@ -134,21 +158,21 @@ export default {
       strokeWidth: 2,
       fontSize:16
     })
+
     // JSON 파일을 기반으로 페이지에 렌더하는 함수
-    canvas.loadFromJSON(work,(e)=>{
-      canvas.renderAll();
-    })
-    // canvas.add(rect);
-    // canvas.add(text);
-    // canvas.add(textBox);
+    // canvas.loadFromJSON(work,(e)=>{
+    //   canvas.renderAll();
+    // })
+
+    // 캔버스에 추가하는 도구들
+    canvas.add(rect);
+    canvas.add(text);
+    canvas.add(textBox);
     canvas.on('object:scaling',this.onObjectScaled);
   },
 
   // 이미지 첨부
-  /*new fabric.Image.fromURL(this.myImage,(_img) => {
-    const _me = _img.set({left:0, top:0, width:_img.width, height:_img.height})
-    canvas.add(_me)
-  })*/
+
 
 }
 </script>
