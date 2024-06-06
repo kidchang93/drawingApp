@@ -115,9 +115,14 @@ export default {
   // Mounted
 
   mounted() {
-    canvas= new fabric.Canvas(this.$refs.canvasRef,{
-      isDrawingMode: false
+
+
+    canvas = new fabric.Canvas(this.$refs.canvasRef, {
+      isDrawingMode: true
     })
+
+
+    /* -- 예제를 위한 도구들 마운트될 때 표시
 
     // 이미지 첨부할 때는 CORS 정책에 위반되므로 다운로드가 안된다.
     // 고로 이미지 첨부시엔 CORS 정책을 포함하여 설정해준다.
@@ -171,9 +176,9 @@ export default {
     canvas.on('object:scaling',this.onObjectScaled);
   },
 
-  // 이미지 첨부
+  */
 
-
+  }
 }
 </script>
 
