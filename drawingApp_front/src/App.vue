@@ -4,8 +4,10 @@
     <button @click="addCircle">원</button>
     <button @click="toJSON">JSON</button>
     <button @click="toImage">이미지</button>
-    <canvas ref="canvasRef" width="500" height="500" @mousedown="sendObj">
-      <div v-for="(item, idx) in canvasObj" :key="idx">
+    <button @click="toDraw">그리기</button>
+
+    <canvas ref="canvasRef" width="500" height="500" >
+      <div v-for="(item, idx) in recvList" :key="idx" @mousedown="sendObj">
         {{ item.canvasObj }}
       </div>
     </canvas>
@@ -15,7 +17,7 @@
       유저이름 :
       <input type="text" v-model="userName">
       내용 :
-      <input type="text" v-model="message" @keyup="sendMessage">
+      <input type="text" v-model="message" @keydown="sendMessage">
       <div v-for="(item, idx) in recvList" :key="idx">
         <h3>유저이름 : {{ item.userName }}</h3>
         <h3>내용 : {{ item.content }}</h3>
@@ -70,6 +72,7 @@ export default {
       canvas.add(rect);
       // setActiveObject 지금 추가한 객체를 선택한 상태로 만든다.
       canvas.setActiveObject(rect);
+      canvas.isDrawingMode = false;
     },
     // 원 도형 추가 메서드
     addCircle(){
@@ -81,6 +84,7 @@ export default {
       })
       canvas.add(circle);
       canvas.setActiveObject(circle);
+      canvas.isDrawingMode = false;
     },
     // 변경중(활동중)인 객체의 정보 및 상태값
     onObjectScaled(){
@@ -91,14 +95,18 @@ export default {
       const scaleX = obj.scaleX
       const scaleY = obj.scaleY
 
+
       // 원하는 형태로 obj 의 상태값을 담을 수 있다.
       obj.set({
         width: width*scaleX,
         height: height*scaleY,
         scaleX:1,
         scaleY:1,
+
       })
       console.log("w",width,"h",height);
+
+
 
 
       // console.log("obj",obj);
@@ -136,25 +144,37 @@ export default {
       link.click();
 
     },
+    // 그리기
+    toDraw(){
+      canvas.isDrawingMode = true;
+    },
     // 웹소켓
     sendMessage(e) {
-      if (e.keyCode === 13 && this.userName !== '' && this.message !== ''){
+      // keyCode == 엔터
+      // 엔터치면 실행
+      /*if (e.keyCode === 13 && this.userName !== '' && this.message !== ''){
         this.send()
         this.message = '';
+      }*/
+      // 누르는대로 실행
+      if (this.userName !== '' && this.message !== ''){
+        this.send()
+        this.message = "";
       }
     },
     // canvas 내용 보내기
     sendObj() {
-      const canvasObj = this.canvasObj;
+      console.log("sendObj")
 
-      this.stompClient.send("/receive",canvasObj,{});
-      canvas.on('object:scaling',this.onObjectScaled);
+      const canvasObj = canvas.getActiveObject();
+
+      // this.stompClient.send("/receive",canvasObj,{});
+
       console.log("canvasObj : "+ canvasObj)
     },
 
     // 메세지 보내기
     send(){
-      console.log("Send Obj : " + this.canvasObj);
 
       if (this.stompClient && this.stompClient.connected){
         const msg = {
@@ -204,8 +224,34 @@ export default {
 
 
     canvas = new fabric.Canvas(this.$refs.canvasRef, {
-      isDrawingMode: true
+      isDrawingMode: false
+
     })
+
+    // 그리기 이벤트 정보
+    const logCanvasState = () => {
+      const canvasState = canvas.toObject();
+      console.log("canvasState : " + JSON.stringify(canvasState));
+    }
+    const logMouseMove = (e) => {
+      console.log('MouseMove : ', e.pointer);
+      logCanvasState();
+    }
+    canvas.on('mouse:down', (e) => {
+      console.log('MouseDown : ', e.pointer);
+      logCanvasState();
+      canvas.on('mouse:move', logMouseMove);
+    })
+    canvas.on('mouse:up', (e) => {
+      console.log('MouseUp : ', e.pointer);
+      canvas.off('mouse:move', logMouseMove);
+    })
+
+
+
+
+    //
+    canvas.on('object:scaling',this.onObjectScaled);
 
 
     /* -- 예제를 위한 도구들 마운트될 때 표시
