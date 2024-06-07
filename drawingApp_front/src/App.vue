@@ -7,8 +7,8 @@
     <button @click="toDraw">그리기</button>
 
     <canvas ref="canvasRef" width="500" height="500" >
-      <div v-for="(item, idx) in recvList" :key="idx" @mousedown="sendObj">
-        {{ item.canvasObj }}
+      <div v-for="(item, idx) in recvList" :key="idx">
+        {{ item.canvasState }}
       </div>
     </canvas>
     <hr>
@@ -18,10 +18,10 @@
       <input type="text" v-model="userName">
       내용 :
       <input type="text" v-model="message" @keydown="sendMessage">
-      <div v-for="(item, idx) in recvList" :key="idx">
-        <h3>유저이름 : {{ item.userName }}</h3>
-        <h3>내용 : {{ item.content }}</h3>
-      </div>
+<!--      <div v-for="(item, idx) in recvList" :key="idx">-->
+<!--        <h3>유저이름 : {{ item.userName }}</h3>-->
+<!--        <h3>내용 : {{ item.content }}</h3>-->
+<!--      </div>-->
 
     </div>
   </div>
@@ -45,7 +45,7 @@ export default {
       userName:"",
       message:"",
       recvList:[],
-      canvasObj:{},
+      canvasState:{}
     }
   },
   created(){
@@ -162,30 +162,19 @@ export default {
         this.message = "";
       }
     },
-    // canvas 내용 보내기
-    sendObj() {
-      console.log("sendObj")
-
-      const canvasObj = canvas.getActiveObject();
-
-      // this.stompClient.send("/receive",canvasObj,{});
-
-      console.log("canvasObj : "+ canvasObj)
-    },
 
     // 메세지 보내기
-    send(){
-
-      if (this.stompClient && this.stompClient.connected){
-        const msg = {
-          userName: this.userName,
-          content: this.message,
-          canvasObj: this.canvasObj,
-        };
-        this.stompClient.send("/receive", JSON.stringify(msg), {});
-        console.log("JSON.stringify(msg) : " +JSON.stringify(msg))
-      }
-    },
+    // send(){
+    //
+    //   if (this.stompClient && this.stompClient.connected){
+    //     const msg = {
+    //       userName: this.userName,
+    //       content: this.message,
+    //     };
+    //     this.stompClient.send("/receive", JSON.stringify(msg), {});
+    //     console.log("JSON.stringify(msg) : " +JSON.stringify(msg))
+    //   }
+    // },
 
     connect() {
       const serverURL = "http://localhost:8080"
@@ -205,7 +194,10 @@ export default {
               console.log('구독으로 받은 메세지 입니다.', res.body);
 
               // 받은 데이터를 json으로 파싱하고 리스트에 넣어줍니다.
-              this.recvList.push(JSON.parse(res.body))
+              const receivedData = JSON.parse(res.body);
+              this.recvList.push(receivedData);
+              this.updateCanvas(receivedData.canvasState);
+              console.log("받았니? : " , this.recvList)
 
             })
           },
@@ -215,7 +207,12 @@ export default {
             this.connected = false;
           }
       );
-    }
+    },
+    updateCanvas(canvasState) {
+      canvas.loadFromJSON(canvasState, () => {
+        canvas.renderAll();
+      });
+    },
   },
 
   // Mounted
@@ -230,28 +227,38 @@ export default {
 
     // 그리기 이벤트 정보
     const logCanvasState = () => {
-      const canvasState = canvas.toObject();
-      console.log("canvasState : " + JSON.stringify(canvasState));
+      const canvasState = JSON.stringify(canvas.toObject());
+
+      const msg = {
+        userName: this.userName,
+        content: this.message,
+        canvasState: canvasState,
+      };
+      if (this.stompClient && this.stompClient.connected){
+        this.stompClient.send("/receive", JSON.stringify(msg), {});
+      }
+
+      console.log("canvasState : " + canvasState);
     }
-    const logMouseMove = (e) => {
-      console.log('MouseMove : ', e.pointer);
-      logCanvasState();
-    }
+    // const logMouseMove = (e) => {
+    //   console.log('MouseMove : ', e.pointer);
+    //   logCanvasState();
+    // }
     canvas.on('mouse:down', (e) => {
       console.log('MouseDown : ', e.pointer);
       logCanvasState();
-      canvas.on('mouse:move', logMouseMove);
+      canvas.on('mouse:move', logCanvasState());
     })
     canvas.on('mouse:up', (e) => {
       console.log('MouseUp : ', e.pointer);
-      canvas.off('mouse:move', logMouseMove);
+      canvas.on('mouse:move', logCanvasState());
     })
 
 
 
 
     //
-    canvas.on('object:scaling',this.onObjectScaled);
+    // canvas.on('object:scaling',this.onObjectScaled);
 
 
     /* -- 예제를 위한 도구들 마운트될 때 표시
