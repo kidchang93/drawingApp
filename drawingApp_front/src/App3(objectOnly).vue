@@ -3,18 +3,16 @@
 
 <!--    <div class="fabric">-->
 <!--      <pre style="white-space: pre">-->
-<!--      <button @click="addNewBox">사각형</button>-->
-<!--      <button @click="addCircle">원</button>-->
-<!--      <button @click="toDraw">그리기</button>-->
-<!--    </pre>-->
+<!--        <button @click="addNewBox">사각형</button>-->
+<!--        <button @click="addCircle">원</button>-->
+<!--        <button @click="toDraw">그리기</button>-->
+<!--      </pre>-->
 <!--      <canvas ref="canvasRef" width="500" height="500" >-->
 <!--        <div v-for="item in recvList" :key="item.canvasState">-->
 <!--          {{ canvasState }}-->
 <!--        </div>-->
 <!--      </canvas>-->
-
 <!--    </div>-->
-
 <!--  </div>-->
 <!--</template>-->
 
@@ -31,10 +29,6 @@
 <!--  name: "app",-->
 <!--  data() {-->
 <!--    return {-->
-<!--      count:250,-->
-<!--      myImage:"https://mml.pstatic.net/www/mobile/edit/20240604_1095/upload_1717474370275V7DHT.png",-->
-<!--      userName:"",-->
-<!--      message:"",-->
 <!--      recvList:[],-->
 <!--      canvasState:{}-->
 <!--    }-->
@@ -78,42 +72,27 @@
 <!--      canvas.isDrawingMode = false;-->
 <!--    },-->
 <!--    // 변경중(활동중)인 객체의 정보 및 상태값-->
-<!--    onObjectScaled(){-->
-<!--      const obj = canvas.getActiveObject()-->
-<!--      const obj2 = canvas.toJSON()-->
-<!--      const width = obj.width-->
-<!--      const height = obj.height-->
-<!--      const scaleX = obj.scaleX-->
-<!--      const scaleY = obj.scaleY-->
+<!--    // onObjectScaled(){-->
+<!--    //   const obj = canvas.getActiveObject()-->
+<!--    //   const obj2 = canvas.toJSON()-->
+<!--    //   const width = obj.width-->
+<!--    //   const height = obj.height-->
+<!--    //   const scaleX = obj.scaleX-->
+<!--    //   const scaleY = obj.scaleY-->
+<!--    //-->
+<!--    //-->
+<!--    //   원하는 형태로 obj 의 상태값을 담을 수 있다.-->
+<!--    //   obj.set({-->
+<!--    //     width: width*scaleX,-->
+<!--    //     height: height*scaleY,-->
+<!--    //     scaleX:1,-->
+<!--    //     scaleY:1,-->
+<!--    //-->
+<!--    //   })-->
+<!--    //   console.log("w",width,"h",height);-->
+<!--    //   console.log(obj2)-->
+<!--    // },-->
 
-
-<!--      // 원하는 형태로 obj 의 상태값을 담을 수 있다.-->
-<!--      // obj.set({-->
-<!--      //   width: width*scaleX,-->
-<!--      //   height: height*scaleY,-->
-<!--      //   scaleX:1,-->
-<!--      //   scaleY:1,-->
-<!--      //-->
-<!--      // })-->
-<!--      // console.log("w",width,"h",height);-->
-<!--      console.log(obj2)-->
-<!--    },-->
-
-<!--    // 이미지 파일 저장-->
-<!--    // 이미지 첨부된 상태에서는 CORS 정책 위반때문에 다운로드가 안됨.-->
-<!--    // 이미지 첨부시 CORS 정책 명시 필수.-->
-<!--    toImage(){-->
-<!--      const ext = "png";  // 파일 형식-->
-<!--      const base64 = canvas.toDataURL({-->
-<!--        format: ext,-->
-<!--        enableRetinaScaling: true-->
-<!--      })-->
-<!--      const link = document.createElement("a");-->
-<!--      link.href = base64;-->
-<!--      link.download = `work.${ext}`;-->
-<!--      link.click();-->
-
-<!--    },-->
 <!--    // 그리기-->
 <!--    toDraw(){-->
 <!--      canvas.isDrawingMode = true;-->
@@ -139,6 +118,7 @@
 <!--              // 받은 데이터를 json으로 파싱하고 리스트에 넣어줍니다.-->
 <!--              const receivedData = JSON.parse(res.body);-->
 <!--              this.recvList.push(receivedData);-->
+
 <!--              // updateCanvas를 이용해서 렌더링 한다.-->
 <!--              this.updateCanvas(receivedData.canvasState);-->
 <!--              // console.log("받았니? : " , this.recvList)-->
@@ -164,7 +144,7 @@
 <!--  // Mounted-->
 <!--  watch:{-->
 <!--    canvasState(newValue, oldValue){-->
-<!--      // const canvasState = JSON.stringify(canvas.toObject());-->
+
 <!--      if (this.stompClient && this.stompClient.connected){-->
 
 <!--        const msg = {-->
@@ -202,6 +182,7 @@
 <!--    });-->
 
 
+
 <!--    // 그리기 이벤트 정보-->
 <!--    // const logCanvasState = () => {-->
 <!--    //   const canvasState = JSON.stringify(canvas.toObject());-->
@@ -230,7 +211,7 @@
 
 
 <!--    //-->
-<!--    canvas.on('object:scaling',this.onObjectScaled);-->
+<!--    // canvas.on('object:scaling',this.onObjectScaled);-->
 
 
 <!--    /* &#45;&#45; 예제를 위한 도구들 마운트될 때 표시-->

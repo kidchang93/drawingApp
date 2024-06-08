@@ -3,18 +3,16 @@
 
     <div class="fabric">
       <pre style="white-space: pre">
-      <button @click="addNewBox">사각형</button>
-      <button @click="addCircle">원</button>
-      <button @click="toDraw">그리기</button>
-    </pre>
+        <button @click="addNewBox">사각형</button>
+        <button @click="addCircle">원</button>
+        <button @click="toDraw">그리기</button>
+      </pre>
       <canvas ref="canvasRef" width="500" height="500" >
         <div v-for="item in recvList" :key="item.canvasState">
           {{ canvasState }}
         </div>
       </canvas>
-
     </div>
-
   </div>
 </template>
 
@@ -24,6 +22,7 @@ import work from './work.json';
 
 import Stomp from 'webstomp-client'
 import SockJS from 'sockjs-client'
+
 
 var canvas = null;
 
@@ -73,28 +72,6 @@ export default {
       canvas.setActiveObject(circle);
       canvas.isDrawingMode = false;
     },
-    // 변경중(활동중)인 객체의 정보 및 상태값
-    onObjectScaled(){
-      const obj = canvas.getActiveObject()
-      const obj2 = canvas.toJSON()
-      const width = obj.width
-      const height = obj.height
-      const scaleX = obj.scaleX
-      const scaleY = obj.scaleY
-
-
-      // 원하는 형태로 obj 의 상태값을 담을 수 있다.
-      // obj.set({
-      //   width: width*scaleX,
-      //   height: height*scaleY,
-      //   scaleX:1,
-      //   scaleY:1,
-      //
-      // })
-      // console.log("w",width,"h",height);
-      console.log(obj2)
-    },
-
     // 그리기
     toDraw(){
       canvas.isDrawingMode = true;
@@ -103,6 +80,7 @@ export default {
     connect() {
       const serverURL = "http://localhost:8080"
       let socket = new SockJS(serverURL);
+
       this.stompClient = Stomp.over(socket);
       console.log("소켓 연결을 시도합니다. 서버 주소 : " + JSON.stringify(socket.url))
       this.stompClient.connect(
@@ -143,7 +121,7 @@ export default {
 
   },
 
-  // Mounted
+  // watch
   watch:{
     canvasState(newValue, oldValue){
 
@@ -163,6 +141,7 @@ export default {
 
     }
   },
+  // Mounted
   mounted() {
 
     canvas = new fabric.Canvas(this.$refs.canvasRef, {
@@ -170,20 +149,29 @@ export default {
 
     })
 
+    const toWatchWhenCanvasChanged = () => {
+      this.canvasState = JSON.stringify(canvas.toObject());
+    }
+
     // 객체 추가시 상태값 변경해야 watch에서 감시하고 로직 수행
     canvas.on('object:added', () => {
-      this.canvasState = JSON.stringify(canvas.toObject());
+      toWatchWhenCanvasChanged();
     });
 
     canvas.on('object:removed', () => {
-      this.canvasState = JSON.stringify(canvas.toObject());
+      toWatchWhenCanvasChanged();
     });
 
     canvas.on('object:modified', () => {
-      this.canvasState = JSON.stringify(canvas.toObject());
+      toWatchWhenCanvasChanged();
     });
 
-
+    canvas.on('mouse:down', () => {
+      toWatchWhenCanvasChanged();
+    })
+    canvas.on('mouse:move', () => {
+      toWatchWhenCanvasChanged();
+    })
 
     // 그리기 이벤트 정보
     // const logCanvasState = () => {
@@ -213,7 +201,7 @@ export default {
 
 
     //
-    canvas.on('object:scaling',this.onObjectScaled);
+    // canvas.on('object:scaling',this.onObjectScaled);
 
 
     /* -- 예제를 위한 도구들 마운트될 때 표시
