@@ -1,29 +1,20 @@
 <template>
-  <div class="fabric">
-    <button @click="addNewBox">사각형</button>
-    <button @click="addCircle">원</button>
-    <button @click="toJSON">JSON</button>
-    <button @click="toImage">이미지</button>
-    <button @click="toDraw">그리기</button>
+  <div>
 
-    <canvas ref="canvasRef" width="500" height="500" >
-      <div v-for="(item, idx) in recvList" :key="idx">
-        {{ item.canvasState }}
-      </div>
-    </canvas>
-    <hr>
-    <h3>웹소켓</h3>
-    <div id="app">
-      유저이름 :
-      <input type="text" v-model="userName">
-      내용 :
-      <input type="text" v-model="message" @keydown="sendMessage">
-<!--      <div v-for="(item, idx) in recvList" :key="idx">-->
-<!--        <h3>유저이름 : {{ item.userName }}</h3>-->
-<!--        <h3>내용 : {{ item.content }}</h3>-->
-<!--      </div>-->
+    <div class="fabric">
+      <pre style="white-space: pre">
+      <button @click="addNewBox">사각형</button>
+      <button @click="addCircle">원</button>
+      <button @click="toDraw">그리기</button>
+    </pre>
+      <canvas ref="canvasRef" width="500" height="500" >
+        <div v-for="item in recvList" :key="item.canvasState">
+          {{ canvasState }}
+        </div>
+      </canvas>
 
     </div>
+
   </div>
 </template>
 
@@ -40,10 +31,6 @@ export default {
   name: "app",
   data() {
     return {
-      count:250,
-      myImage:"https://mml.pstatic.net/www/mobile/edit/20240604_1095/upload_1717474370275V7DHT.png",
-      userName:"",
-      message:"",
       recvList:[],
       canvasState:{}
     }
@@ -89,7 +76,7 @@ export default {
     // 변경중(활동중)인 객체의 정보 및 상태값
     onObjectScaled(){
       const obj = canvas.getActiveObject()
-
+      const obj2 = canvas.toJSON()
       const width = obj.width
       const height = obj.height
       const scaleX = obj.scaleX
@@ -97,90 +84,27 @@ export default {
 
 
       // 원하는 형태로 obj 의 상태값을 담을 수 있다.
-      obj.set({
-        width: width*scaleX,
-        height: height*scaleY,
-        scaleX:1,
-        scaleY:1,
-
-      })
-      console.log("w",width,"h",height);
-
-
-
-
-      // console.log("obj",obj);
-
+      // obj.set({
+      //   width: width*scaleX,
+      //   height: height*scaleY,
+      //   scaleX:1,
+      //   scaleY:1,
+      //
+      // })
+      // console.log("w",width,"h",height);
+      console.log(obj2)
     },
 
-    // JSON 파일로 현재 캔버스를 저장하는 함수
-    async toJSON(){
-
-      const json = canvas.toDatalessJSON(["clipPath"]);
-      const out =JSON.stringify(json, null, "\t");
-      const blob = new Blob([out], {type: "text/plain"});
-      const clipboardItemData = {[blob.type]: blob};
-
-      const blobURL = URL.createObjectURL(blob);
-      const a = document.createElement("a")
-      a.href = blobURL;
-      a.download = "work.json";
-      a.click();
-      URL.revokeObjectURL(blobURL);
-    },
-
-    // 이미지 파일 저장
-    // 이미지 첨부된 상태에서는 CORS 정책 위반때문에 다운로드가 안됨.
-    // 이미지 첨부시 CORS 정책 명시 필수.
-    toImage(){
-      const ext = "png";  // 파일 형식
-      const base64 = canvas.toDataURL({
-        format: ext,
-        enableRetinaScaling: true
-      })
-      const link = document.createElement("a");
-      link.href = base64;
-      link.download = `work.${ext}`;
-      link.click();
-
-    },
     // 그리기
     toDraw(){
       canvas.isDrawingMode = true;
     },
-    // 웹소켓
-    sendMessage(e) {
-      // keyCode == 엔터
-      // 엔터치면 실행
-      /*if (e.keyCode === 13 && this.userName !== '' && this.message !== ''){
-        this.send()
-        this.message = '';
-      }*/
-      // 누르는대로 실행
-      if (this.userName !== '' && this.message !== ''){
-        this.send()
-        this.message = "";
-      }
-    },
-
-    // 메세지 보내기
-    // send(){
-    //
-    //   if (this.stompClient && this.stompClient.connected){
-    //     const msg = {
-    //       userName: this.userName,
-    //       content: this.message,
-    //     };
-    //     this.stompClient.send("/receive", JSON.stringify(msg), {});
-    //     console.log("JSON.stringify(msg) : " +JSON.stringify(msg))
-    //   }
-    // },
-
+    // 웹소켓 연결
     connect() {
       const serverURL = "http://localhost:8080"
       let socket = new SockJS(serverURL);
       this.stompClient = Stomp.over(socket);
-      console.log("소켓 연결을 시도합니다. 서버 주소 : ${serverURL}")
+      console.log("소켓 연결을 시도합니다. 서버 주소 : " + JSON.stringify(socket.url))
       this.stompClient.connect(
           {},
           frame => {
@@ -196,8 +120,10 @@ export default {
               // 받은 데이터를 json으로 파싱하고 리스트에 넣어줍니다.
               const receivedData = JSON.parse(res.body);
               this.recvList.push(receivedData);
+
+              // updateCanvas를 이용해서 렌더링 한다.
               this.updateCanvas(receivedData.canvasState);
-              console.log("받았니? : " , this.recvList)
+              // console.log("받았니? : " , this.recvList)
 
             })
           },
@@ -208,57 +134,86 @@ export default {
           }
       );
     },
+
     updateCanvas(canvasState) {
       canvas.loadFromJSON(canvasState, () => {
         canvas.renderAll();
       });
     },
+
   },
 
   // Mounted
+  watch:{
+    canvasState(newValue, oldValue){
 
+      if (this.stompClient && this.stompClient.connected){
+
+        const msg = {
+          userName: this.userName,
+          content: this.message,
+          canvasState: newValue,
+        };
+
+        this.stompClient.send("/receive", JSON.stringify(msg), {});
+      }
+
+      console.log("newValue : " + newValue);
+      console.log("oldValue : " + oldValue);
+
+    }
+  },
   mounted() {
-
 
     canvas = new fabric.Canvas(this.$refs.canvasRef, {
       isDrawingMode: false
 
     })
 
+    // 객체 추가시 상태값 변경해야 watch에서 감시하고 로직 수행
+    canvas.on('object:added', () => {
+      this.canvasState = JSON.stringify(canvas.toObject());
+    });
+
+    canvas.on('object:removed', () => {
+      this.canvasState = JSON.stringify(canvas.toObject());
+    });
+
+    canvas.on('object:modified', () => {
+      this.canvasState = JSON.stringify(canvas.toObject());
+    });
+
+
+
     // 그리기 이벤트 정보
-    const logCanvasState = () => {
-      const canvasState = JSON.stringify(canvas.toObject());
-
-      const msg = {
-        userName: this.userName,
-        content: this.message,
-        canvasState: canvasState,
-      };
-      if (this.stompClient && this.stompClient.connected){
-        this.stompClient.send("/receive", JSON.stringify(msg), {});
-      }
-
-      console.log("canvasState : " + canvasState);
-    }
-    // const logMouseMove = (e) => {
-    //   console.log('MouseMove : ', e.pointer);
-    //   logCanvasState();
+    // const logCanvasState = () => {
+    //   const canvasState = JSON.stringify(canvas.toObject());
+    //
+    //   const msg = {
+    //     userName: this.userName,
+    //     content: this.message,
+    //     canvasState: canvasState,
+    //   };
+    //   if (this.stompClient && this.stompClient.connected){
+    //     this.stompClient.send("/receive", JSON.stringify(msg), {});
+    //   }
+    //
+    //   console.log("canvasState : " + canvasState.objects);
     // }
-    canvas.on('mouse:down', (e) => {
-      console.log('MouseDown : ', e.pointer);
-      logCanvasState();
-      canvas.on('mouse:move', logCanvasState());
-    })
-    canvas.on('mouse:up', (e) => {
-      console.log('MouseUp : ', e.pointer);
-      canvas.on('mouse:move', logCanvasState());
-    })
+    // canvas.on('mouse:down', (e) => {
+    //   console.log('MouseDown : ', e.pointer);
+    //   this.watch.canvasState();
+    // })
+    // canvas.on('mouse:up', (e) => {
+    //   console.log('MouseUp : ', e.pointer);
+    //   canvas.off('mouse:move', logCanvasState(e.pointer));
+    // })
 
 
 
 
     //
-    // canvas.on('object:scaling',this.onObjectScaled);
+    canvas.on('object:scaling',this.onObjectScaled);
 
 
     /* -- 예제를 위한 도구들 마운트될 때 표시
@@ -334,5 +289,10 @@ export default {
 canvas {
   border: 1px solid #42b983;
   border-radius: 8px ;
+}
+pre{
+  width: 100px;
+  height: 100px;
+  text-align: center;
 }
 </style>
