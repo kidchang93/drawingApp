@@ -80,9 +80,10 @@ export default {
     connect() {
       const serverURL = "http://localhost:8080"
       let socket = new SockJS(serverURL);
-
       this.stompClient = Stomp.over(socket);
+
       console.log("소켓 연결을 시도합니다. 서버 주소 : " + JSON.stringify(socket.url))
+
       this.stompClient.connect(
           {},
           frame => {
@@ -124,7 +125,6 @@ export default {
   // watch
   watch:{
     canvasState(newValue, oldValue){
-
       if (this.stompClient && this.stompClient.connected){
 
         const msg = {
