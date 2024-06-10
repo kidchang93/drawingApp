@@ -134,6 +134,7 @@ export default {
         };
 
         this.stompClient.send("/receive", JSON.stringify(msg), {});
+        // console.log("버퍼사이즈 : ", this.stompClient.on.BUFFER_SIZE)
       }
 
       console.log("newValue : " + newValue);
@@ -165,13 +166,17 @@ export default {
     canvas.on('object:modified', () => {
       toWatchWhenCanvasChanged();
     });
-
-    canvas.on('mouse:down', () => {
-      toWatchWhenCanvasChanged();
-    })
-    canvas.on('mouse:move', () => {
-      toWatchWhenCanvasChanged();
-    })
+    // 마우스 이벤트 발생 시
+    // canvas.on('mouse:down', () => {
+    //   toWatchWhenCanvasChanged();
+    // })
+    // canvas.on('mouse:move', () => {
+    //   toWatchWhenCanvasChanged();
+    // })
+    //
+    // canvas.off('mouse:up', () => {
+    //   toWatchWhenCanvasChanged();
+    // })
 
     // 그리기 이벤트 정보
     // const logCanvasState = () => {

@@ -18,6 +18,7 @@ import java.io.IOException;
 public class KafkaJsonProducer {
 
     private final KafkaTemplate<String, SocketVO> kafkaTemplate;
+
     public void sendMessage(SocketVO socketVO){
         log.info("KafkaProducer 진입");
         Message<SocketVO> message = MessageBuilder
