@@ -3,27 +3,19 @@
 
     <div class="fabric">
       <div style="display: inline-block; margin-left: 10px">
+
+
       <button id="drawing-mode" ref="drawingModeEl" class="btn btn-info" @click="drawingMode">Cancel drawing mode</button><br>
       <button id="clear-canvas" class="btn btn-info" @click="clearCanvas">Clear</button><br>
 
       <div id="drawing-mode-options" ref="drawingOptionsEl">
         <label for="drawing-mode-selector">Mode:</label>
         <select v-model="selectDrawingMode" id="drawing-mode-selector" @change="drawingModeSelector">
-          <option v-for="item in DrawingModeList" :key="item.name" :value="item.value">
+          <option v-for="item in DrawingModeList" :key="item.name">
             {{ item.name }}
           </option>
-
-<!--          <option>Pencil</option>-->
-<!--          <option>Circle</option>-->
-<!--          <option>Spray</option>-->
-<!--          <option>Pattern</option>-->
-
-<!--          <option value="hline">hline</option>-->
-<!--          <option value="vline">vline</option>-->
-<!--          <option value="square">square</option>-->
-<!--          <option value="diamond">diamond</option>-->
-<!--          <option value="texture">texture</option>-->
-        </select><br>
+        </select>
+        <br>
 
         <label for="drawing-line-width">Line width:</label>
         <span class="info">30</span>
@@ -31,8 +23,8 @@
 
         <label for="drawing-color">Line color:</label>
         <input type="color" value="#005E7A" id="drawing-color" ref="drawingColorEl" @change="drawingColorChange"><br>
-
-        <label for="drawing-shadow-color">Shadow color:</label>
+<!--Shadow 쪽 버튼-->
+<!--        <label for="drawing-shadow-color">Shadow color:</label>
         <input type="color" value="#005E7A" id="drawing-shadow-color" ref="drawingShadowColorEl" @change="drawingShadowColorChange"><br>
 
         <label for="drawing-shadow-width">Shadow width:</label>
@@ -41,7 +33,7 @@
 
         <label for="drawing-shadow-offset">Shadow offset:</label>
         <span class="info">0</span>
-        <input type="range" value="0" min="0" max="50" id="drawing-shadow-offset" ref="drawingShadowOffset" @change="drawingShadowOffsetChange"><br>
+        <input type="range" value="0" min="0" max="50" id="drawing-shadow-offset" ref="drawingShadowOffset" @change="drawingShadowOffsetChange"><br>-->
       </div>
     </div>
       <pre style="white-space: pre">
@@ -69,17 +61,8 @@ import {onMounted} from "vue";
 
 
 var canvas = null;
-const $ = function (id) {
-  return document.getElementById(id)
-};
 
 // Element 의 ID 값을 불러오는 변수명 설정.
-var drawingColorEl = $('drawing-color'),
-    drawingShadowColorEl = $('drawing-shadow-color'),
-    drawingLineWidthEl = $('drawing-line-width'),
-    drawingShadowWidth = $('drawing-shadow-width'),
-    drawingShadowOffset = $('drawing-shadow-offset'),
-    clearEl = $('clear-canvas');
 export default {
   name: "app",
 
@@ -89,14 +72,14 @@ export default {
       DrawingModeList:[
         {name: "선택해주세요", value: ""},
         {name: "pencil", value: "pencil"},
-        {name: "circle", value: "circle"},
-        {name: "spray", value: "spray"},
-        {name: "pattern", value: "pattern"},
         {name: "hline", value: "hline"},
-        {name: "vline", value: "vline"},
-        {name: "square", value: "square"},
-        {name: "diamond", value: "diamond"},
-        {name: "texture", value: "texture"},
+        // {name: "vline", value: "vline"},
+        // {name: "square", value: "square"},
+        // {name: "diamond", value: "diamond"},
+        // {name: "texture", value: "texture"},
+        // {name: "circle", value: "circle"},
+        // {name: "spray", value: "spray"},
+        // {name: "pattern", value: "pattern"},
       ],
 
       recvList:[],
@@ -107,8 +90,6 @@ export default {
   },
 
   setup(){
-
-    fabric.Object.prototype.transparentCorners = false;
 
   },
 
@@ -154,9 +135,10 @@ export default {
       canvas.isDrawingMode = false;
     },
     // 그리기
-    // toDraw(){
-    //   canvas.isDrawingMode = true;
-    // },
+    toDraw(){
+      canvas.isDrawingMode = true;
+
+    },
 
     clearCanvas(){
       canvas.clear()
@@ -182,148 +164,32 @@ export default {
     },
     // Pattern Brush 설정
     drawingModeSelector(){
-      // const drawingColorEl = this.$refs.drawingColorEl;
-      // const drawingLineWidthEl = this.$refs.drawingLineWidthEl;
-      // const drawingShadowColorEl = this.$refs.drawingShadowColorEl;
-      // const drawingShadowWidth = this.$refs.drawingShadowWidth;
-      // const drawingShadowOffset = this.$refs.drawingShadowOffset;
-      //
+      const selectedMode = this.selectDrawingMode;
+      const selectedBrush = this.DrawingModeList.find(item => item.value === selectedMode);
 
-
-      if (this.DrawingModeList.name === 'hline'){
+      if (selectedBrush.value === 'pencil') {
         // hLine에 대한 메서드
-        const hLinePatternBrush = new fabric.PatternBrush(canvas);
-        hLinePatternBrush.getPatternSrc = () => {
-          const patternCanvas = fabric.document.createElement('canvas');
-          patternCanvas.width = patternCanvas.height = 10;
-          const ctx = patternCanvas.getContext('2d');
-
-          ctx.strokeStyle = this.color;
-          ctx.lineWidth = 5;
-          ctx.beginPath();
-          ctx.moveTo(5, 0);
-          ctx.lineTo(5, 10);
-          ctx.closePath();
-          ctx.stroke();
-
-          return patternCanvas;
-          console.log("hline 선택")
-        }
-        canvas.freeDrawingBrush = hLinePatternBrush;
-      } else if (this.value === 'vline') {
-        // vLine에 대한 메서드
-        const vLinePatternBrush = new fabric.PatternBrush(canvas);
-        vLinePatternBrush.getPatternSrc = () => {
-          const patternCanvas = fabric.document.createElement('canvas');
-          patternCanvas.width = patternCanvas.height = 10;
-          const ctx = patternCanvas.getContext('2d');
-
-          ctx.strokeStyle = this.color;
-          ctx.lineWidth = 5;
-          ctx.beginPath();
-          ctx.moveTo(0, 5);
-          ctx.lineTo(10, 5);
-          ctx.closePath();
-          ctx.stroke();
-
-          return patternCanvas;
-        }
-        canvas.freeDrawingBrush = vLinePatternBrush;
-      }
-      else if (this.value === 'square') {
-        // squarePatternBrush에 대한 메서드
-        const squarePatternBrush = new fabric.PatternBrush(canvas);
-        squarePatternBrush.getPatternSrc = () => {
-
-          const squareWidth = 10, squareDistance = 2;
-          const patternCanvas = fabric.document.createElement('canvas');
-          patternCanvas.width = patternCanvas.height = squareWidth + squareDistance;
-          const ctx = patternCanvas.getContext('2d');
-
-          ctx.fillStyle = this.color;
-          ctx.fillRect(0, 0, squareWidth, squareWidth);
-
-          return patternCanvas;
-        }
-        canvas.freeDrawingBrush = squarePatternBrush;
-      }
-      else if (this.value === 'diamond') {
-        // diamondPatternBrush에 대한 메서드
-        const diamondPatternBrush = new fabric.PatternBrush(canvas);
-        diamondPatternBrush.getPatternSrc = () => {
-          const squareWidth = 10, squareDistance = 5;
-          const patternCanvas = fabric.document.createElement('canvas');
-          const rect = new fabric.Rect({
-            width: squareWidth,
-            height: squareWidth,
-            angle: 45,
-            fill: this.color
-          })
-
-          const canvasWidth = rect.getBoundingRect().width;
-
-          patternCanvas.width = patternCanvas.height = canvasWidth + squareDistance;
-          rect.set({ left : canvasWidth / 2, top: canvasWidth / 2});
-
-          const ctx = patternCanvas.getContext('2d');
-          rect.render(ctx);
-
-          return patternCanvas;
-        }
-        canvas.freeDrawingBrush = diamondPatternBrush;
-      }
-      else if (this.value === 'texture') {
-        // img 기반 텍스쳐 brush에 대한 메서드
-        const img = new Image();
-        img.src = '';
-        const texturePatternBrush = new fabric.PatternBrush(canvas);
-        texturePatternBrush.source = img;
-        canvas.freeDrawingBrush = texturePatternBrush;
-      }
-      else {
-        canvas.freeDrawingBrush = new fabric[this.DrawingModeList.value + 'Brush'](canvas);
+        console.log("pencil 선택",selectedBrush.value)
+        this.drawingColorChange();
+        this.drawingLineWidthChange();
+        console.log("brush 속성 : ", canvas.freeDrawingBrush)
       }
 
-      if (canvas.freeDrawingBrush){
-        const brush = canvas.freeDrawingBrush;
-        brush.color = drawingColorEl.value;
-        if (brush.getPatternSrc()){
-          brush.source = brush.getPatternSrc.call(brush);
-        }
-        brush.width = parseInt(drawingLineWidthEl.value, 10) || 1;
-        brush.shadow = new fabric.Shadow({
-          blur: parseInt(drawingShadowWidth.value, 10) || 0,
-          offsetX: 0,
-          offsetY: 0,
-          affectStroke: true,
-          color: drawingShadowColorEl.value,
-        })
-      }
     },
 
     drawingColorChange(){
       const brush = canvas.freeDrawingBrush;
-      brush.color = this.value;
+      brush.color = this.$refs.drawingColorEl.value;
       if (brush.getPatternSrc) {
         brush.source = brush.getPatternSrc.call(brush);
       }
     },
-    drawingShadowColorChange(){
-      canvas.freeDrawingBrush.shadow.color = this.value;
-    },
     drawingLineWidthChange(){
-      canvas.freeDrawingBrush.width = parseInt(this.value, 10) || 1;
-      this.previousSibling.innerHTML = this.value;
+      const brush = canvas.freeDrawingBrush;
+      brush.lineWidth = this.$refs.drawingLineWidthEl.value;
+      canvas.freeDrawingBrush.width = parseInt(this.$refs.drawingLineWidthEl.value, 10) || 1;
     },
-    drawingShadowWidthChange(){
-      canvas.freeDrawingBrush.shadow.blur = parseInt(this.value, 10) || 0;
-      this.previousSibling.innerHTML = this.value;
-    },
-    drawingShadowOffsetChange(){
-      canvas.freeDrawingBrush.shadow.offsetX = parseInt(this.value, 10) || 0;
-      canvas.freeDrawingBrush.shadow.offsetY = parseInt(this.value, 10) || 0;
-      this.previousSibling.innerHTML = this.value;
-    },
+
     // 웹소켓 연결
     connect() {
       const serverURL = "http://localhost:8080"
@@ -375,6 +241,11 @@ export default {
     canvasState(newValue, oldValue){
       if (this.stompClient && this.stompClient.connected){
 
+        const toDatalessJSON = canvas.toDatalessJSON().objects[0];
+        const canvasObject = canvas.toObject();
+        console.log("toDatalessJSON : ",toDatalessJSON);
+        console.log("canvasObject : ",canvasObject);
+
         const msg = {
           userName: this.userName,
           content: this.message,
@@ -382,7 +253,6 @@ export default {
         };
 
         this.stompClient.send("/receive", JSON.stringify(msg), {});
-        // console.log("버퍼사이즈 : ", this.stompClient.on.BUFFER_SIZE)
       }
 
       console.log("newValue : " + newValue);
@@ -394,12 +264,13 @@ export default {
   mounted() {
 
     canvas = new fabric.Canvas(this.$refs.canvasRef, {
-      isDrawingMode: false,
+      isDrawingMode: true,
     })
 
 
     const toWatchWhenCanvasChanged = () => {
-      this.canvasState = JSON.stringify(canvas.toObject());
+      this.canvasState = JSON.stringify(canvas.toDatalessJSON().objects[0]);
+
     }
 
     // 객체 추가시 상태값 변경해야 watch에서 감시하고 로직 수행
@@ -415,18 +286,6 @@ export default {
       toWatchWhenCanvasChanged();
     });
 
-    if (canvas.freeDrawingBrush){
-      canvas.freeDrawingBrush.color = drawingColorEl.value;
-      canvas.freeDrawingBrush.source = canvas.freeDrawingBrush.getPatternSrc.call(this);
-      canvas.freeDrawingBrush.width = parseInt(drawingLineWidthEl.value, 10) || 1;
-      canvas.freeDrawingBrush.shadow = new fabric.Shadow({
-        blur: parseInt(drawingShadowWidth.value, 10) || 0,
-        offsetX: 0,
-        offsetY: 0,
-        affectStroke: true,
-        color: drawingShadowColorEl.value,
-      });
-    }
 
 
 
