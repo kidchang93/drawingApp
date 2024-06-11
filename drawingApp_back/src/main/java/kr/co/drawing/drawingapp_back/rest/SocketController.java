@@ -29,11 +29,11 @@ public class SocketController {
         String userName = socketVO.getUserName();
         String content = socketVO.getContent();
         String canvasState = socketVO.getCanvasState();
-
+        String type = socketVO.getType();
         log.info("userName: {} , content: {} , canvas: {} : ", userName,content,canvasState);
 
         // 생성자로 반환값을 생성.
-        SocketVO result = new SocketVO(userName, content, canvasState);
+        SocketVO result = new SocketVO(type, canvasState);
         kafkaJsonProducer.sendMessage(result);
         return result;
     }

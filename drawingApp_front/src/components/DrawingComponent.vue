@@ -182,15 +182,6 @@ export default {
       canvasRef.value.addEventListener('mouseup', stopDrawing);
       canvasRef.value.addEventListener('mousemove', handleMouseMove);
 
-
-      var ctx = canvasRef.value.getContext('2d')
-      console.log("마운트")
-      var img = new Image();
-      img.src = "../assets/vue.svg"
-      console.log(ctx);
-
-      ctx.drawImage(img,0,0,canvasRef.value.width,canvasRef.value.height);
-
       initializeWebSocket();
     });
 

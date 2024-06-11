@@ -15,4 +15,10 @@ public class SocketVO {
     private String userName;
     private String content;
     private String canvasState;
+    private String type;
+
+
+    public SocketVO(String type,String canvasState) {
+        this.type = type;
+    }
 }
