@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 @Data
@@ -14,9 +15,10 @@ import java.util.Map;
 public class SocketVO {
 //    private String userName;
 //    private String content;
-//    private String canvasState;
-//    private String type;
-    private String drawData;
 
+//    private String type;
+//    private String drawData;
+    // private String canvasState;
+    private Object message;
 
 }

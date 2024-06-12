@@ -44,7 +44,7 @@
 
       <canvas ref="canvasRef" width="500" height="500">
 <!--        <div v-for="item in recvList" :key="item.canvasState">-->
-<!--          {{ canvasState }}-->
+<!--          {{ item.canvasState }}-->
 <!--        </div>-->
       </canvas>
     </div>
@@ -54,42 +54,24 @@
 <script>
 import { fabric } from 'fabric';
 import work from './work.json';
-
+import { isProxy, toRaw } from 'vue';
 import Stomp from 'webstomp-client'
 import SockJS from 'sockjs-client'
 import {onMounted, ref} from "vue";
 
-
 var canvas = null;
-
 // Element 의 ID 값을 불러오는 변수명 설정.
 export default {
   name: "app",
 
   data() {
     return {
-      // canvas:null,
-      roomId: {
-        type: String,
-        required: true
-      },
-      webSocketServer: {
-        type: String,
-        required: true
-      },
 
       selectDrawingMode: '',
       DrawingModeList: [
         {name: "선택해주세요", value: ""},
         {name: "pencil", value: "pencil"},
         {name: "hline", value: "hline"},
-        // {name: "vline", value: "vline"},
-        // {name: "square", value: "square"},
-        // {name: "diamond", value: "diamond"},
-        // {name: "texture", value: "texture"},
-        // {name: "circle", value: "circle"},
-        // {name: "spray", value: "spray"},
-        // {name: "pattern", value: "pattern"},
       ],
       // 마우스 이벤트 변수
       mouseEvent: ['mouseOver', 'mouseDown', 'mouseMove', 'mouseUp'],
@@ -99,7 +81,7 @@ export default {
       lineWidth: '',
       recvList: [],
       canvasState: {},
-      message:[],
+      message:{},
     }
 
   },
@@ -115,12 +97,12 @@ export default {
   methods: {
     // WebSocket 세팅
     initializeWebSocket() {
-      const serverURL = "http://localhost:8080"
+      const serverURL = "http://localhost:8080";
       let socket = new SockJS(serverURL);
       this.stompClient = Stomp.over(socket);
 
-      let data = this.drawData;
-      console.log("data : ", data)
+
+
       this.stompClient.connect({}, frame => {
             // 소켓 연결 성공
             this.connected = true;
@@ -128,22 +110,35 @@ export default {
 
             // 서버의 메세지 전송 EndPoint를 구독합니다.
             // 이런 형태를 pub sub 구조라고 합니다.
-            this.stompClient.subscribe("/send", JSON.parse(data))
-        console.log("구독으로부터 받은 메세지 : ", data)
+            this.stompClient.subscribe("/send", (data) => {
+
+              const receivedMessage = JSON.parse(data.body);
+              console.log('Received message: ', receivedMessage);
+              this.recvList.push(receivedMessage);
+
+              console.log("구독으로부터 받은 메세지 : ",receivedMessage)
+            })
+
+
       });
     },
 
     // sendMessage 변수들이 message에 매핑되고 담아서 보내는 메서드
     sendMessage(message) {
+      console.log("message : ", message );
+      this.canvasState = message;
+      console.log("canvasState : ", this.canvasState );
+      let sendMessageToServer = {
+        message: this.canvasState,
+      }
 
-      this.drawData = message;
-      console.log("message : ",JSON.stringify(this.drawData));
+
 
       if (this.stompClient && this.stompClient.connected) {
-        this.stompClient.send(`/receive`, JSON.stringify(message), {});
-        console.log("send Receive : ",JSON.stringify(message));
+        this.stompClient.send(`/receive`, JSON.stringify(sendMessageToServer), {});
+        console.log("send Receive : ",JSON.stringify(sendMessageToServer));
       }
-      return message;
+
     },
 
     canvasData(){
@@ -171,9 +166,7 @@ export default {
     },
 
     drawDataHandler(event){
-
-
-      const ctx = this.$refs.canvasRef.getContext('2d');
+      let ctx = this.$refs.canvasRef.getContext('2d');
 
       console.log("event : ",event)
 
@@ -181,12 +174,12 @@ export default {
       //
       // console.log("previousPoint : ",previousPoint);
 
-      const currentPoint = {
+      let currentPoint = {
         x: event.e.offsetX,
         y: event.e.offsetY
       };
 
-      const drawData = {
+      let drawData = {
         ctx: ctx,
         // prevPoint: previousPoint,
         currentPoint: currentPoint,
@@ -195,8 +188,8 @@ export default {
       };
       console.log("currentPoint",currentPoint)
       console.log("drawData : ",drawData)
-
       this.sendMessage(drawData)
+
 
     },
 
@@ -311,47 +304,23 @@ export default {
   },
 
   // watch
-  watch: {},
+  watch: {
+
+  },
   // Mounted
   mounted() {
+    this.initializeWebSocket();
     canvas = new fabric.Canvas(this.$refs.canvasRef, {
       isDrawingMode: true,
     })
 
-    this.initializeWebSocket();
-
-    canvas.on('mouse:over',this.drawDataHandler)
-    canvas.on('mouse:down', this.drawDataHandler)
-    canvas.on('mouse:move', this.drawDataHandler)
+    canvas.on('mouse:over',(event) => {this.drawDataHandler(event)
+    })
+    canvas.on('mouse:down',(event) => {this.drawDataHandler(event)
+    })
+    // canvas.on('mouse:move', this.drawDataHandler)
     canvas.on('mouse:up', this.drawDataHandler)
-
-
-
-    // canvas.on('mouse:over', this.drawDataHandler) ? this.mouseEvent = 'mouseOver' : null;
-    // canvas.on('mouse:down', this.drawDataHandler) ? this.mouseEvent = 'mouseDown' : '';
-    // canvas.on('mouse:move', this.drawDataHandler) ? this.mouseEvent = 'mouseMove' : '';
-    // canvas.on('mouse:up', this.drawDataHandler) ? this.mouseEvent = 'mouseUp' : '';
-
-    // 글씨 입력 박스 생성
-    // const textBox = new fabric.Textbox("FabricJS",{
-    //   left: 20,
-    //   top: 20,
-    //   fill: "black",
-    //   stroke: "black",
-    //   strokeWidth: 2,
-    //   fontSize:16
-    // })
-    //
-    // // 써진 글씨 출력박스 생성, 입력 불가
-    // const text = new fabric.Text("CKHUB",{
-    //   left: 100,
-    //   top: 20,
-    //   fill: "black",
-    //   stroke: "black",
-    //   strokeWidth: 2,
-    //   fontSize:16
-    // })
-
+    // canvas.on('after:render', this.drawDataHandler)
   },
 }
 </script>

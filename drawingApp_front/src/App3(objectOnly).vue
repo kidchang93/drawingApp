@@ -94,12 +94,12 @@ export default {
             // 서버의 메세지 전송 EndPoint를 구독합니다.
             // 이런 형태를 pub sub 구조라고 합니다.
             this.stompClient.subscribe("/send", res => {
-              console.log('구독으로 받은 메세지 입니다.', res.body);
+
 
               // 받은 데이터를 json으로 파싱하고 리스트에 넣어줍니다.
               const receivedData = JSON.parse(res.body);
               this.recvList.push(receivedData);
-
+              console.log('구독으로 받은 메세지 입니다.', receivedData);
               // updateCanvas를 이용해서 렌더링 한다.
               this.updateCanvas(receivedData.canvasState);
               // console.log("받았니? : " , this.recvList)
