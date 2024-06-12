@@ -12,13 +12,11 @@ import java.util.Map;
 @NoArgsConstructor
 @ToString
 public class SocketVO {
-    private String userName;
-    private String content;
-    private String canvasState;
-    private String type;
+//    private String userName;
+//    private String content;
+//    private String canvasState;
+//    private String type;
+    private String drawData;
 
 
-    public SocketVO(String type,String canvasState) {
-        this.type = type;
-    }
 }

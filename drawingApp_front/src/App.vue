@@ -7,9 +7,9 @@
       <button @click="drawDataHandler">drawDataHandler</button>
       <button id="drawing-mode" ref="drawingModeEl" class="btn btn-info" @click="drawingMode">Cancel drawing mode</button><br>
       <button id="clear-canvas" class="btn btn-info" @click="clearCanvas">Clear</button><br>
-
+<!--        <span class="info" v-for="item in mouseEvent" :key="item">{{ item }}</span>-->
       <div id="drawing-mode-options" ref="drawingOptionsEl">
-        <label for="drawing-mode-selector">Mode:</label>
+        <label for="drawing-mode-selector">Mode : </label>
         <select v-model="selectDrawingMode" id="drawing-mode-selector" @change="drawingModeSelector">
           <option v-for="item in DrawingModeList" :key="item.name">
             {{ item.name }}
@@ -18,11 +18,11 @@
         <br>
 
         <label for="drawing-line-width">Line width:</label>
-        <span class="info">30</span>
-        <input type="range" value="30" min="0" max="150" id="drawing-line-width" ref="drawingLineWidthEl" @change="drawingLineWidthChange"><br>
+        <span class="info">{{ this.lineWidth }}</span>
+        <input type="range" value="50" min="0" max="200" id="drawing-line-width" ref="drawingLineWidthEl" @change="drawingLineWidthChange"><br>
 
         <label for="drawing-color">Line color:</label>
-        <input type="color" value="#005E7A" id="drawing-color" ref="drawingColorEl" @change="drawingColorChange"><br>
+        <input type="color" value="" id="drawing-color" ref="drawingColorEl" @change="drawingColorChange"><br>
 <!--Shadow 쪽 버튼-->
 <!--        <label for="drawing-shadow-color">Shadow color:</label>
         <input type="color" value="#005E7A" id="drawing-shadow-color" ref="drawingShadowColorEl" @change="drawingShadowColorChange"><br>
@@ -42,7 +42,7 @@
         <button @click="toDraw">그리기</button>
       </pre>
 
-      <canvas ref="canvasRef" width="500" height="500" >
+      <canvas ref="canvasRef" width="500" height="500">
 <!--        <div v-for="item in recvList" :key="item.canvasState">-->
 <!--          {{ canvasState }}-->
 <!--        </div>-->
@@ -68,7 +68,7 @@ export default {
 
   data() {
     return {
-
+      // canvas:null,
       roomId: {
         type: String,
         required: true
@@ -92,26 +92,19 @@ export default {
         // {name: "pattern", value: "pattern"},
       ],
       // 마우스 이벤트 변수
-      mouseEvent: [],
+      mouseEvent: ['mouseOver', 'mouseDown', 'mouseMove', 'mouseUp'],
 
       // Draw 변수
       drawData: [],
-
+      lineWidth: '',
       recvList: [],
       canvasState: {},
-
+      message:[],
     }
 
   },
 
   setup() {
-    const canvas = ref(null);
-    const stompClient = ref(null);
-    const isDrawingEnabled = ref(true);
-    const color = ref('red');
-    const isDrawing = ref(false);
-    const previousPoint = ref(null);
-
 
   },
 
@@ -122,32 +115,41 @@ export default {
   methods: {
     // WebSocket 세팅
     initializeWebSocket() {
-      let socket = new SockJS("http://localhost:8080");
-      let canvasData = this.canvasData;
-      console.log(canvasData)
+      const serverURL = "http://localhost:8080"
+      let socket = new SockJS(serverURL);
       this.stompClient = Stomp.over(socket);
 
-      this.stompClient.connect({}, () => {
-        this.stompClient.subscribe("/send", canvasData);
-        // this.sendMessage({
-        //   type: 'JOIN',
-        //   data: this.drawData,
-        // });
+      let data = this.drawData;
+      console.log("data : ", data)
+      this.stompClient.connect({}, frame => {
+            // 소켓 연결 성공
+            this.connected = true;
+            console.log('소켓 연결 성공', frame);
+
+            // 서버의 메세지 전송 EndPoint를 구독합니다.
+            // 이런 형태를 pub sub 구조라고 합니다.
+            this.stompClient.subscribe("/send", JSON.parse(data))
+        console.log("구독으로부터 받은 메세지 : ", data)
       });
     },
 
     // sendMessage 변수들이 message에 매핑되고 담아서 보내는 메서드
     sendMessage(message) {
+
+      this.drawData = message;
+      console.log("message : ",JSON.stringify(this.drawData));
+
       if (this.stompClient && this.stompClient.connected) {
         this.stompClient.send(`/receive`, JSON.stringify(message), {});
         console.log("send Receive : ",JSON.stringify(message));
       }
+      return message;
     },
 
     canvasData(){
 
     },
-    drawLine({ ctx, prevPoint, currentPoint, color }){
+    drawLine({ ctx, currentPoint, color }){
       const { x, y } = currentPoint;
       const startPoint = prevPoint ?? currentPoint;
 
@@ -162,29 +164,39 @@ export default {
       ctx.beginPath();
       ctx.arc(startPoint.x, startPoint.y, 2, 0, 2 * Math.PI);
       ctx.fill();
-      return { ctx, prevPoint, currentPoint, color };
+
+
+      console.log("DrawLine : ",this.drawLine)
+      return { ctx, currentPoint, color };
     },
 
     drawDataHandler(event){
+
+
       const ctx = this.$refs.canvasRef.getContext('2d');
 
-      const previousPoint = {
-        x: event.offsetX,
-        y: event.offsetY
-      }
+      console.log("event : ",event)
+
+      // const previousPoint = event.absolutePointer;
+      //
+      // console.log("previousPoint : ",previousPoint);
+
       const currentPoint = {
-        x: event.offsetX,
-        y: event.offsetY
+        x: event.e.offsetX,
+        y: event.e.offsetY
       };
 
-      const drawData ={
+      const drawData = {
         ctx: ctx,
-        prevPoint: previousPoint,
+        // prevPoint: previousPoint,
         currentPoint: currentPoint,
+        brushLineWidth: this.drawingLineWidthChange(),
         color: this.drawingColorChange(),
       };
       console.log("currentPoint",currentPoint)
       console.log("drawData : ",drawData)
+
+      this.sendMessage(drawData)
 
     },
 
@@ -292,8 +304,8 @@ export default {
       brushLineWidth = canvas.freeDrawingBrush;
       brushLineWidth.lineWidth = this.$refs.drawingLineWidthEl.value;
       canvas.freeDrawingBrush.width = parseInt(this.$refs.drawingLineWidthEl.value, 10) || 1;
-      console.log("brushLineWidth",brushLineWidth)
-      return brushLineWidth;
+
+      return brushLineWidth.lineWidth;
     },
 
   },
@@ -302,12 +314,23 @@ export default {
   watch: {},
   // Mounted
   mounted() {
-    this.initializeWebSocket();
-
     canvas = new fabric.Canvas(this.$refs.canvasRef, {
       isDrawingMode: true,
     })
+
+    this.initializeWebSocket();
+
+    canvas.on('mouse:over',this.drawDataHandler)
     canvas.on('mouse:down', this.drawDataHandler)
+    canvas.on('mouse:move', this.drawDataHandler)
+    canvas.on('mouse:up', this.drawDataHandler)
+
+
+
+    // canvas.on('mouse:over', this.drawDataHandler) ? this.mouseEvent = 'mouseOver' : null;
+    // canvas.on('mouse:down', this.drawDataHandler) ? this.mouseEvent = 'mouseDown' : '';
+    // canvas.on('mouse:move', this.drawDataHandler) ? this.mouseEvent = 'mouseMove' : '';
+    // canvas.on('mouse:up', this.drawDataHandler) ? this.mouseEvent = 'mouseUp' : '';
 
     // 글씨 입력 박스 생성
     // const textBox = new fabric.Textbox("FabricJS",{

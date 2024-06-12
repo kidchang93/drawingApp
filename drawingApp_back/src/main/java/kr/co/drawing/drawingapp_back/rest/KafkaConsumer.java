@@ -21,4 +21,10 @@ public class KafkaConsumer {
         log.info("Consuming the message from ckhub Topic :: " + socketVO.toString());
     }
 
+    @KafkaListener(topics = "drawApp", groupId = "myGroup2")
+    public void consumeJsonMsg2(SocketVO socketVO) {
+
+        log.info("Consuming the message from ckhub Topic2 :: " + socketVO.toString());
+    }
+
 }

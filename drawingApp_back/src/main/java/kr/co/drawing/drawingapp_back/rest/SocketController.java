@@ -26,14 +26,15 @@ public class SocketController {
     public SocketVO socketHandler(SocketVO socketVO) {
         // socketHandler는 /receive에서 메세지를 받고 /send로 메세지를 보냄.
         // 정의한 SocketVO를 인자값, 반환값으로 사용.
-        String userName = socketVO.getUserName();
-        String content = socketVO.getContent();
-        String canvasState = socketVO.getCanvasState();
-        String type = socketVO.getType();
-        log.info("userName: {} , content: {} , canvas: {} : ", userName,content,canvasState);
+//        String userName = socketVO.getUserName();
+//        String content = socketVO.getContent();
+//        String canvasState = socketVO.getCanvasState();
+//        String type = socketVO.getType();
+        String drawData = socketVO.getDrawData();
+        log.info("drawData {} : ", drawData);
 
         // 생성자로 반환값을 생성.
-        SocketVO result = new SocketVO(type, canvasState);
+        SocketVO result = new SocketVO(drawData);
         kafkaJsonProducer.sendMessage(result);
         return result;
     }
