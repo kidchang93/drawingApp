@@ -1,5 +1,14 @@
 import { createApp } from 'vue'
-import './style.css'
+import router from './router';
 import App from './App.vue'
+import mitt from "mitt";
 
-createApp(App).mount('#app')
+const app = createApp(App);
+
+// 이벤트 버스 설정
+app.config.globalProperties.$bus = mitt();
+
+app.use(router)
+app.mount('#app');
+
+export default app;

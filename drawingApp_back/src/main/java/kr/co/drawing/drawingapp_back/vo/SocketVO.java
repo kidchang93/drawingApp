@@ -19,6 +19,6 @@ public class SocketVO {
 //    private String type;
 //    private String drawData;
     // private String canvasState;
-    private Object message;
+    private String message;
 
 }

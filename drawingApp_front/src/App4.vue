@@ -7,7 +7,7 @@
 </template>
 
 <script>
-import DrawingComponent from "@/components/DrawingComponent.vue";
+import DrawingComponent from "@/components/Whiteboard.vue";
 
 export default {
   name: 'MainPage',

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Map;
 
 
 @Controller
@@ -24,25 +25,33 @@ public class SocketController {
 
     private final KafkaJsonProducer kafkaJsonProducer;
 
-    @MessageMapping("/receive")     // receive로 메세지를 받을 EndPoint로 설정.
-    @SendTo("/send")             // /send로 메세지를 반환.
-    public SocketVO socketHandler(SocketVO socketVO) throws JsonProcessingException {
-        // socketHandler는 /receive에서 메세지를 받고 /send로 메세지를 보냄.
-        // 정의한 SocketVO를 인자값, 반환값으로 사용.
-//        String userName = socketVO.getUserName();
-//        String content = socketVO.getContent();
-        // String canvasState = socketVO.getCanvasState();
+//    @MessageMapping("/receive")     // receive로 메세지를 받을 EndPoint로 설정.
+//    @SendTo("/send")             // /send로 메세지를 반환.
+//    public SocketVO socketHandler(SocketVO socketVO) throws JsonProcessingException {
+//        // socketHandler는 /receive에서 메세지를 받고 /send로 메세지를 보냄.
+//        // 정의한 SocketVO를 인자값, 반환값으로 사용.
+////        String userName = socketVO.getUserName();
+////        String content = socketVO.getContent();
+//        // String canvasState = socketVO.getCanvasState();
+//
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        String message = objectMapper.writeValueAsString(socketVO.getMessage()); ;
+////        String type = socketVO.getType();
+////        String drawData = socketVO.getDrawData();
+//
+//        log.info("drawData {} : ", message);
+//
+//        // 생성자로 반환값을 생성.
+//        SocketVO result = new SocketVO(message);
+//        kafkaJsonProducer.sendMessage(result);
+//        return result;
+//    }
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        String message = objectMapper.writeValueAsString(socketVO.getMessage()); ;
-//        String type = socketVO.getType();
-//        String drawData = socketVO.getDrawData();
-        log.info("drawData {} : ", message);
-
-        // 생성자로 반환값을 생성.
-        SocketVO result = new SocketVO(message);
-        kafkaJsonProducer.sendMessage(result);
-        return result;
+    @MessageMapping("/receive")
+    @SendTo("/send")
+    public String sendUpdate(String message){
+        return message;
     }
+
 
 }
